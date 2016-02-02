@@ -25,3 +25,10 @@ class DownsamplingTest(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+    from timeit import timeit
+    xs = xrange(10000)
+    ys = (math.sin(x)-2*math.cos(x-10) for x in xs)
+    src = list(zip(xs, ys))
+    for i in xrange(10000):
+        downsample(src, 512)

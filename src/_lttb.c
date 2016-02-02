@@ -550,11 +550,6 @@ static CYTHON_INLINE void __Pyx_ErrFetch(PyObject **type, PyObject **value, PyOb
 
 static void __Pyx_Raise(PyObject *type, PyObject *value, PyObject *tb, PyObject *cause);
 
-static CYTHON_INLINE long __Pyx_div_long(long, long);
-
-#define UNARY_NEG_WOULD_OVERFLOW(x)\
-        (((x) < 0) & ((unsigned long)(x) == 0-(unsigned long)(x)))
-
 #define __Pyx_GetItemInt(o, i, type, is_signed, to_py_func, is_list, wraparound, boundscheck)\
     (__Pyx_fits_Py_ssize_t(i, type, is_signed) ?\
     __Pyx_GetItemInt_Fast(o, (Py_ssize_t)i, is_list, wraparound, boundscheck) :\
@@ -577,9 +572,9 @@ static CYTHON_INLINE PyObject *__Pyx_GetItemInt_Fast(PyObject *o, Py_ssize_t i,
                                                      int is_list, int wraparound, int boundscheck);
 
 #if CYTHON_COMPILING_IN_CPYTHON
-static PyObject* __Pyx_PyInt_AddObjC(PyObject *op1, PyObject *op2, long intval, int inplace);
+static PyObject* __Pyx_PyFloat_AddObjC(PyObject *op1, PyObject *op2, double floatval, int inplace);
 #else
-#define __Pyx_PyInt_AddObjC(op1, op2, intval, inplace)\
+#define __Pyx_PyFloat_AddObjC(op1, op2, floatval, inplace)\
     (inplace ? PyNumber_InPlaceAdd(op1, op2) : PyNumber_Add(op1, op2))
 #endif
 
@@ -701,9 +696,10 @@ static PyObject *__pyx_n_s_test;
 static PyObject *__pyx_n_s_threshold;
 static PyObject *__pyx_n_s_ulttb__lttb;
 static PyObject *__pyx_pf_5ulttb_5_lttb_downsample(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_data, long __pyx_v_threshold); /* proto */
+static PyObject *__pyx_float_0_0;
+static PyObject *__pyx_float_1_0;
+static PyObject *__pyx_float_2_0;
 static PyObject *__pyx_int_0;
-static PyObject *__pyx_int_1;
-static PyObject *__pyx_int_2;
 static PyObject *__pyx_tuple_;
 static PyObject *__pyx_tuple__2;
 static PyObject *__pyx_tuple__3;
@@ -714,8 +710,8 @@ static PyObject *__pyx_codeobj__5;
  * 
  * 
  * def downsample(data, long threshold):             # <<<<<<<<<<<<<<
- *     cdef:
- *         long every
+ *     cdef long data_len,avg_range_start,avg_range_end,avg_range_end_,range_offs, a, next_a, range_to
+ *     cdef float avg_x, avg_y, avg_range_length, point_ax, point_ay,  every
  */
 
 /* Python wrapper */
@@ -781,22 +777,22 @@ static PyObject *__pyx_pw_5ulttb_5_lttb_1downsample(PyObject *__pyx_self, PyObje
 }
 
 static PyObject *__pyx_pf_5ulttb_5_lttb_downsample(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_data, long __pyx_v_threshold) {
-  long __pyx_v_every;
   long __pyx_v_data_len;
-  float __pyx_v_avg_x;
-  float __pyx_v_avg_y;
   long __pyx_v_avg_range_start;
   long __pyx_v_avg_range_end;
   long __pyx_v_avg_range_end_;
-  float __pyx_v_avg_range_length;
   long __pyx_v_range_offs;
   long __pyx_v_a;
   long __pyx_v_next_a;
   long __pyx_v_range_to;
+  float __pyx_v_avg_x;
+  float __pyx_v_avg_y;
+  float __pyx_v_avg_range_length;
   float __pyx_v_point_ax;
   float __pyx_v_point_ay;
-  float __pyx_v_area;
-  float __pyx_v_max_area;
+  float __pyx_v_every;
+  double __pyx_v_area;
+  double __pyx_v_max_area;
   PyObject *__pyx_v_max_area_point = NULL;
   PyObject *__pyx_v_sampled = NULL;
   PyObject *__pyx_v_i = NULL;
@@ -807,13 +803,13 @@ static PyObject *__pyx_pf_5ulttb_5_lttb_downsample(CYTHON_UNUSED PyObject *__pyx
   int __pyx_t_3;
   PyObject *__pyx_t_4 = NULL;
   Py_ssize_t __pyx_t_5;
-  long __pyx_t_6;
-  long __pyx_t_7;
+  double __pyx_t_6;
+  double __pyx_t_7;
   PyObject *__pyx_t_8 = NULL;
   PyObject *(*__pyx_t_9)(PyObject *);
   PyObject *__pyx_t_10 = NULL;
   PyObject *__pyx_t_11 = NULL;
-  double __pyx_t_12;
+  long __pyx_t_12;
   float __pyx_t_13;
   PyObject *__pyx_t_14 = NULL;
   int __pyx_t_15;
@@ -822,28 +818,28 @@ static PyObject *__pyx_pf_5ulttb_5_lttb_downsample(CYTHON_UNUSED PyObject *__pyx
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("downsample", 0);
 
-  /* "src/_lttb.pyx":25
- *         float max_area
+  /* "src/_lttb.pyx":12
+ * 
  * 
  *     if not (not hasattr(data, "strip") and             # <<<<<<<<<<<<<<
  *             hasattr(data, "__getitem__") or
  *             hasattr(data, "__iter__")):
  */
-  __pyx_t_2 = PyObject_HasAttr(__pyx_v_data, __pyx_n_s_strip); if (unlikely(__pyx_t_2 == -1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 25; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_2 = PyObject_HasAttr(__pyx_v_data, __pyx_n_s_strip); if (unlikely(__pyx_t_2 == -1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 12; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __pyx_t_3 = ((!(__pyx_t_2 != 0)) != 0);
   if (!__pyx_t_3) {
     goto __pyx_L5_next_or;
   } else {
   }
 
-  /* "src/_lttb.pyx":26
+  /* "src/_lttb.pyx":13
  * 
  *     if not (not hasattr(data, "strip") and
  *             hasattr(data, "__getitem__") or             # <<<<<<<<<<<<<<
  *             hasattr(data, "__iter__")):
  *          raise ValueError("Data must be listlike.")
  */
-  __pyx_t_3 = PyObject_HasAttr(__pyx_v_data, __pyx_n_s_getitem); if (unlikely(__pyx_t_3 == -1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 26; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_3 = PyObject_HasAttr(__pyx_v_data, __pyx_n_s_getitem); if (unlikely(__pyx_t_3 == -1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 13; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __pyx_t_2 = (__pyx_t_3 != 0);
   if (!__pyx_t_2) {
   } else {
@@ -852,20 +848,20 @@ static PyObject *__pyx_pf_5ulttb_5_lttb_downsample(CYTHON_UNUSED PyObject *__pyx
   }
   __pyx_L5_next_or:;
 
-  /* "src/_lttb.pyx":27
+  /* "src/_lttb.pyx":14
  *     if not (not hasattr(data, "strip") and
  *             hasattr(data, "__getitem__") or
  *             hasattr(data, "__iter__")):             # <<<<<<<<<<<<<<
  *          raise ValueError("Data must be listlike.")
  * 
  */
-  __pyx_t_2 = PyObject_HasAttr(__pyx_v_data, __pyx_n_s_iter); if (unlikely(__pyx_t_2 == -1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 27; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_2 = PyObject_HasAttr(__pyx_v_data, __pyx_n_s_iter); if (unlikely(__pyx_t_2 == -1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 14; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __pyx_t_3 = (__pyx_t_2 != 0);
   __pyx_t_1 = __pyx_t_3;
   __pyx_L4_bool_binop_done:;
 
-  /* "src/_lttb.pyx":25
- *         float max_area
+  /* "src/_lttb.pyx":12
+ * 
  * 
  *     if not (not hasattr(data, "strip") and             # <<<<<<<<<<<<<<
  *             hasattr(data, "__getitem__") or
@@ -874,21 +870,21 @@ static PyObject *__pyx_pf_5ulttb_5_lttb_downsample(CYTHON_UNUSED PyObject *__pyx
   __pyx_t_3 = ((!__pyx_t_1) != 0);
   if (__pyx_t_3) {
 
-    /* "src/_lttb.pyx":28
+    /* "src/_lttb.pyx":15
  *             hasattr(data, "__getitem__") or
  *             hasattr(data, "__iter__")):
  *          raise ValueError("Data must be listlike.")             # <<<<<<<<<<<<<<
  * 
  *     data_len = len(data)
  */
-    __pyx_t_4 = __Pyx_PyObject_Call(__pyx_builtin_ValueError, __pyx_tuple_, NULL); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 28; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_4 = __Pyx_PyObject_Call(__pyx_builtin_ValueError, __pyx_tuple_, NULL); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 15; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_4);
     __Pyx_Raise(__pyx_t_4, 0, 0, 0);
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-    {__pyx_filename = __pyx_f[0]; __pyx_lineno = 28; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    {__pyx_filename = __pyx_f[0]; __pyx_lineno = 15; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
 
-    /* "src/_lttb.pyx":25
- *         float max_area
+    /* "src/_lttb.pyx":12
+ * 
  * 
  *     if not (not hasattr(data, "strip") and             # <<<<<<<<<<<<<<
  *             hasattr(data, "__getitem__") or
@@ -896,17 +892,17 @@ static PyObject *__pyx_pf_5ulttb_5_lttb_downsample(CYTHON_UNUSED PyObject *__pyx
  */
   }
 
-  /* "src/_lttb.pyx":30
+  /* "src/_lttb.pyx":17
  *          raise ValueError("Data must be listlike.")
  * 
  *     data_len = len(data)             # <<<<<<<<<<<<<<
  * 
  * 
  */
-  __pyx_t_5 = PyObject_Length(__pyx_v_data); if (unlikely(__pyx_t_5 == -1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 30; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_5 = PyObject_Length(__pyx_v_data); if (unlikely(__pyx_t_5 == -1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 17; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __pyx_v_data_len = __pyx_t_5;
 
-  /* "src/_lttb.pyx":33
+  /* "src/_lttb.pyx":20
  * 
  * 
  *     if data_len <= threshold:             # <<<<<<<<<<<<<<
@@ -916,20 +912,20 @@ static PyObject *__pyx_pf_5ulttb_5_lttb_downsample(CYTHON_UNUSED PyObject *__pyx
   __pyx_t_3 = ((__pyx_v_data_len <= __pyx_v_threshold) != 0);
   if (__pyx_t_3) {
 
-    /* "src/_lttb.pyx":34
+    /* "src/_lttb.pyx":21
  * 
  *     if data_len <= threshold:
  *         raise ValueError("Threshold must be smaller than the length of the data.")             # <<<<<<<<<<<<<<
  * 
- *     every = (data_len - 2)/(threshold - 2)
+ *     every = (data_len - 2.0)/(threshold - 2.0)
  */
-    __pyx_t_4 = __Pyx_PyObject_Call(__pyx_builtin_ValueError, __pyx_tuple__2, NULL); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 34; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_4 = __Pyx_PyObject_Call(__pyx_builtin_ValueError, __pyx_tuple__2, NULL); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 21; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_4);
     __Pyx_Raise(__pyx_t_4, 0, 0, 0);
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-    {__pyx_filename = __pyx_f[0]; __pyx_lineno = 34; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    {__pyx_filename = __pyx_f[0]; __pyx_lineno = 21; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
 
-    /* "src/_lttb.pyx":33
+    /* "src/_lttb.pyx":20
  * 
  * 
  *     if data_len <= threshold:             # <<<<<<<<<<<<<<
@@ -938,63 +934,59 @@ static PyObject *__pyx_pf_5ulttb_5_lttb_downsample(CYTHON_UNUSED PyObject *__pyx
  */
   }
 
-  /* "src/_lttb.pyx":36
+  /* "src/_lttb.pyx":23
  *         raise ValueError("Threshold must be smaller than the length of the data.")
  * 
- *     every = (data_len - 2)/(threshold - 2)             # <<<<<<<<<<<<<<
+ *     every = (data_len - 2.0)/(threshold - 2.0)             # <<<<<<<<<<<<<<
  * 
  *     a = 0  # Initially a is the first point in the triangle
  */
-  __pyx_t_6 = (__pyx_v_data_len - 2);
-  __pyx_t_7 = (__pyx_v_threshold - 2);
+  __pyx_t_6 = (__pyx_v_data_len - 2.0);
+  __pyx_t_7 = (__pyx_v_threshold - 2.0);
   if (unlikely(__pyx_t_7 == 0)) {
-    PyErr_SetString(PyExc_ZeroDivisionError, "integer division or modulo by zero");
-    {__pyx_filename = __pyx_f[0]; __pyx_lineno = 36; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    PyErr_SetString(PyExc_ZeroDivisionError, "float division");
+    {__pyx_filename = __pyx_f[0]; __pyx_lineno = 23; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   }
-  else if (sizeof(long) == sizeof(long) && (!(((long)-1) > 0)) && unlikely(__pyx_t_7 == (long)-1)  && unlikely(UNARY_NEG_WOULD_OVERFLOW(__pyx_t_6))) {
-    PyErr_SetString(PyExc_OverflowError, "value too large to perform division");
-    {__pyx_filename = __pyx_f[0]; __pyx_lineno = 36; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  }
-  __pyx_v_every = __Pyx_div_long(__pyx_t_6, __pyx_t_7);
+  __pyx_v_every = (__pyx_t_6 / __pyx_t_7);
 
-  /* "src/_lttb.pyx":38
- *     every = (data_len - 2)/(threshold - 2)
+  /* "src/_lttb.pyx":25
+ *     every = (data_len - 2.0)/(threshold - 2.0)
  * 
  *     a = 0  # Initially a is the first point in the triangle             # <<<<<<<<<<<<<<
  *     next_a = 0
- *     max_area_point = (0, 0)
+ *     max_area_point = (0.0, 0.0)
  */
   __pyx_v_a = 0;
 
-  /* "src/_lttb.pyx":39
+  /* "src/_lttb.pyx":26
  * 
  *     a = 0  # Initially a is the first point in the triangle
  *     next_a = 0             # <<<<<<<<<<<<<<
- *     max_area_point = (0, 0)
+ *     max_area_point = (0.0, 0.0)
  * 
  */
   __pyx_v_next_a = 0;
 
-  /* "src/_lttb.pyx":40
+  /* "src/_lttb.pyx":27
  *     a = 0  # Initially a is the first point in the triangle
  *     next_a = 0
- *     max_area_point = (0, 0)             # <<<<<<<<<<<<<<
+ *     max_area_point = (0.0, 0.0)             # <<<<<<<<<<<<<<
  * 
  *     sampled = [data[0]]  # Always add the first point
  */
   __Pyx_INCREF(__pyx_tuple__3);
   __pyx_v_max_area_point = __pyx_tuple__3;
 
-  /* "src/_lttb.pyx":42
- *     max_area_point = (0, 0)
+  /* "src/_lttb.pyx":29
+ *     max_area_point = (0.0, 0.0)
  * 
  *     sampled = [data[0]]  # Always add the first point             # <<<<<<<<<<<<<<
  * 
  *     for i in range(0, threshold-2):
  */
-  __pyx_t_4 = __Pyx_GetItemInt(__pyx_v_data, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(__pyx_t_4 == NULL)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 42; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
+  __pyx_t_4 = __Pyx_GetItemInt(__pyx_v_data, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(__pyx_t_4 == NULL)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 29; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
   __Pyx_GOTREF(__pyx_t_4);
-  __pyx_t_8 = PyList_New(1); if (unlikely(!__pyx_t_8)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 42; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_8 = PyList_New(1); if (unlikely(!__pyx_t_8)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 29; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_8);
   __Pyx_GIVEREF(__pyx_t_4);
   PyList_SET_ITEM(__pyx_t_8, 0, __pyx_t_4);
@@ -1002,16 +994,16 @@ static PyObject *__pyx_pf_5ulttb_5_lttb_downsample(CYTHON_UNUSED PyObject *__pyx
   __pyx_v_sampled = ((PyObject*)__pyx_t_8);
   __pyx_t_8 = 0;
 
-  /* "src/_lttb.pyx":44
+  /* "src/_lttb.pyx":31
  *     sampled = [data[0]]  # Always add the first point
  * 
  *     for i in range(0, threshold-2):             # <<<<<<<<<<<<<<
  *         # Calculate point average for next bucket (containing c)
  * 
  */
-  __pyx_t_8 = __Pyx_PyInt_From_long((__pyx_v_threshold - 2)); if (unlikely(!__pyx_t_8)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 44; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_8 = __Pyx_PyInt_From_long((__pyx_v_threshold - 2)); if (unlikely(!__pyx_t_8)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 31; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_8);
-  __pyx_t_4 = PyTuple_New(2); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 44; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_4 = PyTuple_New(2); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 31; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_INCREF(__pyx_int_0);
   __Pyx_GIVEREF(__pyx_int_0);
@@ -1019,16 +1011,16 @@ static PyObject *__pyx_pf_5ulttb_5_lttb_downsample(CYTHON_UNUSED PyObject *__pyx
   __Pyx_GIVEREF(__pyx_t_8);
   PyTuple_SET_ITEM(__pyx_t_4, 1, __pyx_t_8);
   __pyx_t_8 = 0;
-  __pyx_t_8 = __Pyx_PyObject_Call(__pyx_builtin_range, __pyx_t_4, NULL); if (unlikely(!__pyx_t_8)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 44; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_8 = __Pyx_PyObject_Call(__pyx_builtin_range, __pyx_t_4, NULL); if (unlikely(!__pyx_t_8)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 31; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_8);
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
   if (likely(PyList_CheckExact(__pyx_t_8)) || PyTuple_CheckExact(__pyx_t_8)) {
     __pyx_t_4 = __pyx_t_8; __Pyx_INCREF(__pyx_t_4); __pyx_t_5 = 0;
     __pyx_t_9 = NULL;
   } else {
-    __pyx_t_5 = -1; __pyx_t_4 = PyObject_GetIter(__pyx_t_8); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 44; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_5 = -1; __pyx_t_4 = PyObject_GetIter(__pyx_t_8); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 31; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_4);
-    __pyx_t_9 = Py_TYPE(__pyx_t_4)->tp_iternext; if (unlikely(!__pyx_t_9)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 44; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_9 = Py_TYPE(__pyx_t_4)->tp_iternext; if (unlikely(!__pyx_t_9)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 31; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   }
   __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
   for (;;) {
@@ -1036,17 +1028,17 @@ static PyObject *__pyx_pf_5ulttb_5_lttb_downsample(CYTHON_UNUSED PyObject *__pyx
       if (likely(PyList_CheckExact(__pyx_t_4))) {
         if (__pyx_t_5 >= PyList_GET_SIZE(__pyx_t_4)) break;
         #if CYTHON_COMPILING_IN_CPYTHON
-        __pyx_t_8 = PyList_GET_ITEM(__pyx_t_4, __pyx_t_5); __Pyx_INCREF(__pyx_t_8); __pyx_t_5++; if (unlikely(0 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 44; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+        __pyx_t_8 = PyList_GET_ITEM(__pyx_t_4, __pyx_t_5); __Pyx_INCREF(__pyx_t_8); __pyx_t_5++; if (unlikely(0 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 31; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
         #else
-        __pyx_t_8 = PySequence_ITEM(__pyx_t_4, __pyx_t_5); __pyx_t_5++; if (unlikely(!__pyx_t_8)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 44; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+        __pyx_t_8 = PySequence_ITEM(__pyx_t_4, __pyx_t_5); __pyx_t_5++; if (unlikely(!__pyx_t_8)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 31; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
         __Pyx_GOTREF(__pyx_t_8);
         #endif
       } else {
         if (__pyx_t_5 >= PyTuple_GET_SIZE(__pyx_t_4)) break;
         #if CYTHON_COMPILING_IN_CPYTHON
-        __pyx_t_8 = PyTuple_GET_ITEM(__pyx_t_4, __pyx_t_5); __Pyx_INCREF(__pyx_t_8); __pyx_t_5++; if (unlikely(0 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 44; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+        __pyx_t_8 = PyTuple_GET_ITEM(__pyx_t_4, __pyx_t_5); __Pyx_INCREF(__pyx_t_8); __pyx_t_5++; if (unlikely(0 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 31; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
         #else
-        __pyx_t_8 = PySequence_ITEM(__pyx_t_4, __pyx_t_5); __pyx_t_5++; if (unlikely(!__pyx_t_8)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 44; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+        __pyx_t_8 = PySequence_ITEM(__pyx_t_4, __pyx_t_5); __pyx_t_5++; if (unlikely(!__pyx_t_8)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 31; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
         __Pyx_GOTREF(__pyx_t_8);
         #endif
       }
@@ -1056,7 +1048,7 @@ static PyObject *__pyx_pf_5ulttb_5_lttb_downsample(CYTHON_UNUSED PyObject *__pyx
         PyObject* exc_type = PyErr_Occurred();
         if (exc_type) {
           if (likely(exc_type == PyExc_StopIteration || PyErr_GivenExceptionMatches(exc_type, PyExc_StopIteration))) PyErr_Clear();
-          else {__pyx_filename = __pyx_f[0]; __pyx_lineno = 44; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+          else {__pyx_filename = __pyx_f[0]; __pyx_lineno = 31; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
         }
         break;
       }
@@ -1065,102 +1057,129 @@ static PyObject *__pyx_pf_5ulttb_5_lttb_downsample(CYTHON_UNUSED PyObject *__pyx
     __Pyx_XDECREF_SET(__pyx_v_i, __pyx_t_8);
     __pyx_t_8 = 0;
 
-    /* "src/_lttb.pyx":47
+    /* "src/_lttb.pyx":34
  *         # Calculate point average for next bucket (containing c)
  * 
- *         avg_x = 0             # <<<<<<<<<<<<<<
- *         avg_y = 0
- *         avg_range_start = (long) (floor((i+1)*every) + 1)
+ *         avg_x = 0.0             # <<<<<<<<<<<<<<
+ *         avg_y = 0.0
+ *         avg_range_start = (long) (floor((i+1.0)*every) + 1.0)
  */
     __pyx_v_avg_x = 0.0;
 
-    /* "src/_lttb.pyx":48
+    /* "src/_lttb.pyx":35
  * 
- *         avg_x = 0
- *         avg_y = 0             # <<<<<<<<<<<<<<
- *         avg_range_start = (long) (floor((i+1)*every) + 1)
- *         avg_range_end_ = (long) (floor((i+2)*every) + 1)
+ *         avg_x = 0.0
+ *         avg_y = 0.0             # <<<<<<<<<<<<<<
+ *         avg_range_start = (long) (floor((i+1.0)*every) + 1.0)
+ *         avg_range_end_ = (long) (floor((i+2.0)*every) + 1.0)
  */
     __pyx_v_avg_y = 0.0;
 
-    /* "src/_lttb.pyx":49
- *         avg_x = 0
- *         avg_y = 0
- *         avg_range_start = (long) (floor((i+1)*every) + 1)             # <<<<<<<<<<<<<<
- *         avg_range_end_ = (long) (floor((i+2)*every) + 1)
- *         avg_range_end = avg_range_end_ if avg_range_end_ < data_len else data_len
+    /* "src/_lttb.pyx":36
+ *         avg_x = 0.0
+ *         avg_y = 0.0
+ *         avg_range_start = (long) (floor((i+1.0)*every) + 1.0)             # <<<<<<<<<<<<<<
+ *         avg_range_end_ = (long) (floor((i+2.0)*every) + 1.0)
+ *         if avg_range_end_ < data_len:
  */
-    __pyx_t_8 = __Pyx_PyInt_AddObjC(__pyx_v_i, __pyx_int_1, 1, 0); if (unlikely(!__pyx_t_8)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 49; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_8 = __Pyx_PyFloat_AddObjC(__pyx_v_i, __pyx_float_1_0, 1.0, 0); if (unlikely(!__pyx_t_8)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 36; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_8);
-    __pyx_t_10 = __Pyx_PyInt_From_long(__pyx_v_every); if (unlikely(!__pyx_t_10)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 49; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_10 = PyFloat_FromDouble(__pyx_v_every); if (unlikely(!__pyx_t_10)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 36; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_10);
-    __pyx_t_11 = PyNumber_Multiply(__pyx_t_8, __pyx_t_10); if (unlikely(!__pyx_t_11)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 49; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_11 = PyNumber_Multiply(__pyx_t_8, __pyx_t_10); if (unlikely(!__pyx_t_11)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 36; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_11);
     __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
     __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
-    __pyx_t_12 = __pyx_PyFloat_AsDouble(__pyx_t_11); if (unlikely((__pyx_t_12 == (double)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 49; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_7 = __pyx_PyFloat_AsDouble(__pyx_t_11); if (unlikely((__pyx_t_7 == (double)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 36; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
-    __pyx_t_11 = PyFloat_FromDouble((floor(__pyx_t_12) + 1.0)); if (unlikely(!__pyx_t_11)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 49; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_11 = PyFloat_FromDouble((floor(__pyx_t_7) + 1.0)); if (unlikely(!__pyx_t_11)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 36; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_11);
-    __pyx_t_10 = PyTuple_New(1); if (unlikely(!__pyx_t_10)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 49; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_10 = PyTuple_New(1); if (unlikely(!__pyx_t_10)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 36; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_10);
     __Pyx_GIVEREF(__pyx_t_11);
     PyTuple_SET_ITEM(__pyx_t_10, 0, __pyx_t_11);
     __pyx_t_11 = 0;
-    __pyx_t_11 = __Pyx_PyObject_Call(((PyObject *)(&PyLong_Type)), __pyx_t_10, NULL); if (unlikely(!__pyx_t_11)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 49; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_11 = __Pyx_PyObject_Call(((PyObject *)(&PyLong_Type)), __pyx_t_10, NULL); if (unlikely(!__pyx_t_11)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 36; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_11);
     __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
-    __pyx_t_7 = __Pyx_PyInt_As_long(__pyx_t_11); if (unlikely((__pyx_t_7 == (long)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 49; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_12 = __Pyx_PyInt_As_long(__pyx_t_11); if (unlikely((__pyx_t_12 == (long)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 36; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
-    __pyx_v_avg_range_start = __pyx_t_7;
+    __pyx_v_avg_range_start = __pyx_t_12;
 
-    /* "src/_lttb.pyx":50
- *         avg_y = 0
- *         avg_range_start = (long) (floor((i+1)*every) + 1)
- *         avg_range_end_ = (long) (floor((i+2)*every) + 1)             # <<<<<<<<<<<<<<
- *         avg_range_end = avg_range_end_ if avg_range_end_ < data_len else data_len
- * 
+    /* "src/_lttb.pyx":37
+ *         avg_y = 0.0
+ *         avg_range_start = (long) (floor((i+1.0)*every) + 1.0)
+ *         avg_range_end_ = (long) (floor((i+2.0)*every) + 1.0)             # <<<<<<<<<<<<<<
+ *         if avg_range_end_ < data_len:
+ *             avg_range_end = avg_range_end_
  */
-    __pyx_t_11 = __Pyx_PyInt_AddObjC(__pyx_v_i, __pyx_int_2, 2, 0); if (unlikely(!__pyx_t_11)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 50; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_11 = __Pyx_PyFloat_AddObjC(__pyx_v_i, __pyx_float_2_0, 2.0, 0); if (unlikely(!__pyx_t_11)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 37; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_11);
-    __pyx_t_10 = __Pyx_PyInt_From_long(__pyx_v_every); if (unlikely(!__pyx_t_10)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 50; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_10 = PyFloat_FromDouble(__pyx_v_every); if (unlikely(!__pyx_t_10)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 37; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_10);
-    __pyx_t_8 = PyNumber_Multiply(__pyx_t_11, __pyx_t_10); if (unlikely(!__pyx_t_8)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 50; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_8 = PyNumber_Multiply(__pyx_t_11, __pyx_t_10); if (unlikely(!__pyx_t_8)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 37; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_8);
     __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
     __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
-    __pyx_t_12 = __pyx_PyFloat_AsDouble(__pyx_t_8); if (unlikely((__pyx_t_12 == (double)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 50; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_7 = __pyx_PyFloat_AsDouble(__pyx_t_8); if (unlikely((__pyx_t_7 == (double)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 37; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
-    __pyx_t_8 = PyFloat_FromDouble((floor(__pyx_t_12) + 1.0)); if (unlikely(!__pyx_t_8)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 50; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_8 = PyFloat_FromDouble((floor(__pyx_t_7) + 1.0)); if (unlikely(!__pyx_t_8)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 37; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_8);
-    __pyx_t_10 = PyTuple_New(1); if (unlikely(!__pyx_t_10)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 50; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_10 = PyTuple_New(1); if (unlikely(!__pyx_t_10)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 37; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_10);
     __Pyx_GIVEREF(__pyx_t_8);
     PyTuple_SET_ITEM(__pyx_t_10, 0, __pyx_t_8);
     __pyx_t_8 = 0;
-    __pyx_t_8 = __Pyx_PyObject_Call(((PyObject *)(&PyLong_Type)), __pyx_t_10, NULL); if (unlikely(!__pyx_t_8)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 50; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_8 = __Pyx_PyObject_Call(((PyObject *)(&PyLong_Type)), __pyx_t_10, NULL); if (unlikely(!__pyx_t_8)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 37; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_8);
     __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
-    __pyx_t_7 = __Pyx_PyInt_As_long(__pyx_t_8); if (unlikely((__pyx_t_7 == (long)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 50; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_12 = __Pyx_PyInt_As_long(__pyx_t_8); if (unlikely((__pyx_t_12 == (long)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 37; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
-    __pyx_v_avg_range_end_ = __pyx_t_7;
+    __pyx_v_avg_range_end_ = __pyx_t_12;
 
-    /* "src/_lttb.pyx":51
- *         avg_range_start = (long) (floor((i+1)*every) + 1)
- *         avg_range_end_ = (long) (floor((i+2)*every) + 1)
- *         avg_range_end = avg_range_end_ if avg_range_end_ < data_len else data_len             # <<<<<<<<<<<<<<
+    /* "src/_lttb.pyx":38
+ *         avg_range_start = (long) (floor((i+1.0)*every) + 1.0)
+ *         avg_range_end_ = (long) (floor((i+2.0)*every) + 1.0)
+ *         if avg_range_end_ < data_len:             # <<<<<<<<<<<<<<
+ *             avg_range_end = avg_range_end_
+ *         else:
+ */
+    __pyx_t_3 = ((__pyx_v_avg_range_end_ < __pyx_v_data_len) != 0);
+    if (__pyx_t_3) {
+
+      /* "src/_lttb.pyx":39
+ *         avg_range_end_ = (long) (floor((i+2.0)*every) + 1.0)
+ *         if avg_range_end_ < data_len:
+ *             avg_range_end = avg_range_end_             # <<<<<<<<<<<<<<
+ *         else:
+ *             avg_range_end = data_len
+ */
+      __pyx_v_avg_range_end = __pyx_v_avg_range_end_;
+
+      /* "src/_lttb.pyx":38
+ *         avg_range_start = (long) (floor((i+1.0)*every) + 1.0)
+ *         avg_range_end_ = (long) (floor((i+2.0)*every) + 1.0)
+ *         if avg_range_end_ < data_len:             # <<<<<<<<<<<<<<
+ *             avg_range_end = avg_range_end_
+ *         else:
+ */
+      goto __pyx_L10;
+    }
+
+    /* "src/_lttb.pyx":41
+ *             avg_range_end = avg_range_end_
+ *         else:
+ *             avg_range_end = data_len             # <<<<<<<<<<<<<<
  * 
  *         avg_range_length = avg_range_end - avg_range_start
  */
-    if (((__pyx_v_avg_range_end_ < __pyx_v_data_len) != 0)) {
-      __pyx_t_7 = __pyx_v_avg_range_end_;
-    } else {
-      __pyx_t_7 = __pyx_v_data_len;
+    /*else*/ {
+      __pyx_v_avg_range_end = __pyx_v_data_len;
     }
-    __pyx_v_avg_range_end = __pyx_t_7;
+    __pyx_L10:;
 
-    /* "src/_lttb.pyx":53
- *         avg_range_end = avg_range_end_ if avg_range_end_ < data_len else data_len
+    /* "src/_lttb.pyx":43
+ *             avg_range_end = data_len
  * 
  *         avg_range_length = avg_range_end - avg_range_start             # <<<<<<<<<<<<<<
  * 
@@ -1168,7 +1187,7 @@ static PyObject *__pyx_pf_5ulttb_5_lttb_downsample(CYTHON_UNUSED PyObject *__pyx
  */
     __pyx_v_avg_range_length = (__pyx_v_avg_range_end - __pyx_v_avg_range_start);
 
-    /* "src/_lttb.pyx":55
+    /* "src/_lttb.pyx":45
  *         avg_range_length = avg_range_end - avg_range_start
  * 
  *         while avg_range_start < avg_range_end:             # <<<<<<<<<<<<<<
@@ -1179,51 +1198,51 @@ static PyObject *__pyx_pf_5ulttb_5_lttb_downsample(CYTHON_UNUSED PyObject *__pyx
       __pyx_t_3 = ((__pyx_v_avg_range_start < __pyx_v_avg_range_end) != 0);
       if (!__pyx_t_3) break;
 
-      /* "src/_lttb.pyx":56
+      /* "src/_lttb.pyx":46
  * 
  *         while avg_range_start < avg_range_end:
  *             avg_x += data[avg_range_start][0]             # <<<<<<<<<<<<<<
  *             avg_y += data[avg_range_start][1]
  *             avg_range_start += 1
  */
-      __pyx_t_8 = PyFloat_FromDouble(__pyx_v_avg_x); if (unlikely(!__pyx_t_8)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 56; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_8 = PyFloat_FromDouble(__pyx_v_avg_x); if (unlikely(!__pyx_t_8)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 46; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_GOTREF(__pyx_t_8);
-      __pyx_t_10 = __Pyx_GetItemInt(__pyx_v_data, __pyx_v_avg_range_start, long, 1, __Pyx_PyInt_From_long, 0, 1, 1); if (unlikely(__pyx_t_10 == NULL)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 56; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
+      __pyx_t_10 = __Pyx_GetItemInt(__pyx_v_data, __pyx_v_avg_range_start, long, 1, __Pyx_PyInt_From_long, 0, 1, 1); if (unlikely(__pyx_t_10 == NULL)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 46; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
       __Pyx_GOTREF(__pyx_t_10);
-      __pyx_t_11 = __Pyx_GetItemInt(__pyx_t_10, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(__pyx_t_11 == NULL)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 56; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
+      __pyx_t_11 = __Pyx_GetItemInt(__pyx_t_10, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(__pyx_t_11 == NULL)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 46; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
       __Pyx_GOTREF(__pyx_t_11);
       __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
-      __pyx_t_10 = PyNumber_InPlaceAdd(__pyx_t_8, __pyx_t_11); if (unlikely(!__pyx_t_10)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 56; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_10 = PyNumber_InPlaceAdd(__pyx_t_8, __pyx_t_11); if (unlikely(!__pyx_t_10)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 46; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_GOTREF(__pyx_t_10);
       __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
       __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
-      __pyx_t_13 = __pyx_PyFloat_AsFloat(__pyx_t_10); if (unlikely((__pyx_t_13 == (float)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 56; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_13 = __pyx_PyFloat_AsFloat(__pyx_t_10); if (unlikely((__pyx_t_13 == (float)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 46; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
       __pyx_v_avg_x = __pyx_t_13;
 
-      /* "src/_lttb.pyx":57
+      /* "src/_lttb.pyx":47
  *         while avg_range_start < avg_range_end:
  *             avg_x += data[avg_range_start][0]
  *             avg_y += data[avg_range_start][1]             # <<<<<<<<<<<<<<
  *             avg_range_start += 1
  * 
  */
-      __pyx_t_10 = PyFloat_FromDouble(__pyx_v_avg_y); if (unlikely(!__pyx_t_10)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 57; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_10 = PyFloat_FromDouble(__pyx_v_avg_y); if (unlikely(!__pyx_t_10)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 47; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_GOTREF(__pyx_t_10);
-      __pyx_t_11 = __Pyx_GetItemInt(__pyx_v_data, __pyx_v_avg_range_start, long, 1, __Pyx_PyInt_From_long, 0, 1, 1); if (unlikely(__pyx_t_11 == NULL)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 57; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
+      __pyx_t_11 = __Pyx_GetItemInt(__pyx_v_data, __pyx_v_avg_range_start, long, 1, __Pyx_PyInt_From_long, 0, 1, 1); if (unlikely(__pyx_t_11 == NULL)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 47; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
       __Pyx_GOTREF(__pyx_t_11);
-      __pyx_t_8 = __Pyx_GetItemInt(__pyx_t_11, 1, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(__pyx_t_8 == NULL)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 57; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
+      __pyx_t_8 = __Pyx_GetItemInt(__pyx_t_11, 1, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(__pyx_t_8 == NULL)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 47; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
       __Pyx_GOTREF(__pyx_t_8);
       __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
-      __pyx_t_11 = PyNumber_InPlaceAdd(__pyx_t_10, __pyx_t_8); if (unlikely(!__pyx_t_11)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 57; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_11 = PyNumber_InPlaceAdd(__pyx_t_10, __pyx_t_8); if (unlikely(!__pyx_t_11)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 47; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_GOTREF(__pyx_t_11);
       __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
       __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
-      __pyx_t_13 = __pyx_PyFloat_AsFloat(__pyx_t_11); if (unlikely((__pyx_t_13 == (float)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 57; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_13 = __pyx_PyFloat_AsFloat(__pyx_t_11); if (unlikely((__pyx_t_13 == (float)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 47; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
       __pyx_v_avg_y = __pyx_t_13;
 
-      /* "src/_lttb.pyx":58
+      /* "src/_lttb.pyx":48
  *             avg_x += data[avg_range_start][0]
  *             avg_y += data[avg_range_start][1]
  *             avg_range_start += 1             # <<<<<<<<<<<<<<
@@ -1233,7 +1252,7 @@ static PyObject *__pyx_pf_5ulttb_5_lttb_downsample(CYTHON_UNUSED PyObject *__pyx
       __pyx_v_avg_range_start = (__pyx_v_avg_range_start + 1);
     }
 
-    /* "src/_lttb.pyx":60
+    /* "src/_lttb.pyx":50
  *             avg_range_start += 1
  * 
  *         avg_x /= avg_range_length             # <<<<<<<<<<<<<<
@@ -1242,11 +1261,11 @@ static PyObject *__pyx_pf_5ulttb_5_lttb_downsample(CYTHON_UNUSED PyObject *__pyx
  */
     if (unlikely(__pyx_v_avg_range_length == 0)) {
       PyErr_SetString(PyExc_ZeroDivisionError, "float division");
-      {__pyx_filename = __pyx_f[0]; __pyx_lineno = 60; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      {__pyx_filename = __pyx_f[0]; __pyx_lineno = 50; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     }
     __pyx_v_avg_x = (__pyx_v_avg_x / __pyx_v_avg_range_length);
 
-    /* "src/_lttb.pyx":61
+    /* "src/_lttb.pyx":51
  * 
  *         avg_x /= avg_range_length
  *         avg_y /= avg_range_length             # <<<<<<<<<<<<<<
@@ -1255,105 +1274,105 @@ static PyObject *__pyx_pf_5ulttb_5_lttb_downsample(CYTHON_UNUSED PyObject *__pyx
  */
     if (unlikely(__pyx_v_avg_range_length == 0)) {
       PyErr_SetString(PyExc_ZeroDivisionError, "float division");
-      {__pyx_filename = __pyx_f[0]; __pyx_lineno = 61; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      {__pyx_filename = __pyx_f[0]; __pyx_lineno = 51; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     }
     __pyx_v_avg_y = (__pyx_v_avg_y / __pyx_v_avg_range_length);
 
-    /* "src/_lttb.pyx":64
+    /* "src/_lttb.pyx":54
  * 
  *         # Get the range for this bucket
- *         range_offs =(long) (floor((i+0)*every) + 1)             # <<<<<<<<<<<<<<
- *         range_to = (long) (floor((i+1)*every) + 1)
+ *         range_offs =(long) (floor((i+0.0)*every) + 1.0)             # <<<<<<<<<<<<<<
+ *         range_to = (long) (floor((i+1.0)*every) + 1.0)
  * 
  */
-    __pyx_t_11 = __Pyx_PyInt_AddObjC(__pyx_v_i, __pyx_int_0, 0, 0); if (unlikely(!__pyx_t_11)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 64; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_11 = __Pyx_PyFloat_AddObjC(__pyx_v_i, __pyx_float_0_0, 0.0, 0); if (unlikely(!__pyx_t_11)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 54; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_11);
-    __pyx_t_8 = __Pyx_PyInt_From_long(__pyx_v_every); if (unlikely(!__pyx_t_8)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 64; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_8 = PyFloat_FromDouble(__pyx_v_every); if (unlikely(!__pyx_t_8)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 54; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_8);
-    __pyx_t_10 = PyNumber_Multiply(__pyx_t_11, __pyx_t_8); if (unlikely(!__pyx_t_10)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 64; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_10 = PyNumber_Multiply(__pyx_t_11, __pyx_t_8); if (unlikely(!__pyx_t_10)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 54; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_10);
     __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
     __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
-    __pyx_t_12 = __pyx_PyFloat_AsDouble(__pyx_t_10); if (unlikely((__pyx_t_12 == (double)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 64; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_7 = __pyx_PyFloat_AsDouble(__pyx_t_10); if (unlikely((__pyx_t_7 == (double)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 54; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
-    __pyx_t_10 = PyFloat_FromDouble((floor(__pyx_t_12) + 1.0)); if (unlikely(!__pyx_t_10)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 64; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_10 = PyFloat_FromDouble((floor(__pyx_t_7) + 1.0)); if (unlikely(!__pyx_t_10)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 54; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_10);
-    __pyx_t_8 = PyTuple_New(1); if (unlikely(!__pyx_t_8)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 64; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_8 = PyTuple_New(1); if (unlikely(!__pyx_t_8)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 54; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_8);
     __Pyx_GIVEREF(__pyx_t_10);
     PyTuple_SET_ITEM(__pyx_t_8, 0, __pyx_t_10);
     __pyx_t_10 = 0;
-    __pyx_t_10 = __Pyx_PyObject_Call(((PyObject *)(&PyLong_Type)), __pyx_t_8, NULL); if (unlikely(!__pyx_t_10)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 64; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_10 = __Pyx_PyObject_Call(((PyObject *)(&PyLong_Type)), __pyx_t_8, NULL); if (unlikely(!__pyx_t_10)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 54; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_10);
     __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
-    __pyx_t_7 = __Pyx_PyInt_As_long(__pyx_t_10); if (unlikely((__pyx_t_7 == (long)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 64; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_12 = __Pyx_PyInt_As_long(__pyx_t_10); if (unlikely((__pyx_t_12 == (long)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 54; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
-    __pyx_v_range_offs = __pyx_t_7;
+    __pyx_v_range_offs = __pyx_t_12;
 
-    /* "src/_lttb.pyx":65
+    /* "src/_lttb.pyx":55
  *         # Get the range for this bucket
- *         range_offs =(long) (floor((i+0)*every) + 1)
- *         range_to = (long) (floor((i+1)*every) + 1)             # <<<<<<<<<<<<<<
+ *         range_offs =(long) (floor((i+0.0)*every) + 1.0)
+ *         range_to = (long) (floor((i+1.0)*every) + 1.0)             # <<<<<<<<<<<<<<
  * 
  *         # Point a
  */
-    __pyx_t_10 = __Pyx_PyInt_AddObjC(__pyx_v_i, __pyx_int_1, 1, 0); if (unlikely(!__pyx_t_10)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 65; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_10 = __Pyx_PyFloat_AddObjC(__pyx_v_i, __pyx_float_1_0, 1.0, 0); if (unlikely(!__pyx_t_10)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 55; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_10);
-    __pyx_t_8 = __Pyx_PyInt_From_long(__pyx_v_every); if (unlikely(!__pyx_t_8)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 65; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_8 = PyFloat_FromDouble(__pyx_v_every); if (unlikely(!__pyx_t_8)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 55; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_8);
-    __pyx_t_11 = PyNumber_Multiply(__pyx_t_10, __pyx_t_8); if (unlikely(!__pyx_t_11)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 65; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_11 = PyNumber_Multiply(__pyx_t_10, __pyx_t_8); if (unlikely(!__pyx_t_11)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 55; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_11);
     __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
     __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
-    __pyx_t_12 = __pyx_PyFloat_AsDouble(__pyx_t_11); if (unlikely((__pyx_t_12 == (double)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 65; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_7 = __pyx_PyFloat_AsDouble(__pyx_t_11); if (unlikely((__pyx_t_7 == (double)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 55; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
-    __pyx_t_11 = PyFloat_FromDouble((floor(__pyx_t_12) + 1.0)); if (unlikely(!__pyx_t_11)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 65; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_11 = PyFloat_FromDouble((floor(__pyx_t_7) + 1.0)); if (unlikely(!__pyx_t_11)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 55; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_11);
-    __pyx_t_8 = PyTuple_New(1); if (unlikely(!__pyx_t_8)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 65; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_8 = PyTuple_New(1); if (unlikely(!__pyx_t_8)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 55; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_8);
     __Pyx_GIVEREF(__pyx_t_11);
     PyTuple_SET_ITEM(__pyx_t_8, 0, __pyx_t_11);
     __pyx_t_11 = 0;
-    __pyx_t_11 = __Pyx_PyObject_Call(((PyObject *)(&PyLong_Type)), __pyx_t_8, NULL); if (unlikely(!__pyx_t_11)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 65; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_11 = __Pyx_PyObject_Call(((PyObject *)(&PyLong_Type)), __pyx_t_8, NULL); if (unlikely(!__pyx_t_11)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 55; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_11);
     __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
-    __pyx_t_7 = __Pyx_PyInt_As_long(__pyx_t_11); if (unlikely((__pyx_t_7 == (long)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 65; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_12 = __Pyx_PyInt_As_long(__pyx_t_11); if (unlikely((__pyx_t_12 == (long)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 55; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
-    __pyx_v_range_to = __pyx_t_7;
+    __pyx_v_range_to = __pyx_t_12;
 
-    /* "src/_lttb.pyx":68
+    /* "src/_lttb.pyx":58
  * 
  *         # Point a
  *         point_ax = data[a][0]             # <<<<<<<<<<<<<<
  *         point_ay = data[a][1]
  * 
  */
-    __pyx_t_11 = __Pyx_GetItemInt(__pyx_v_data, __pyx_v_a, long, 1, __Pyx_PyInt_From_long, 0, 1, 1); if (unlikely(__pyx_t_11 == NULL)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 68; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
+    __pyx_t_11 = __Pyx_GetItemInt(__pyx_v_data, __pyx_v_a, long, 1, __Pyx_PyInt_From_long, 0, 1, 1); if (unlikely(__pyx_t_11 == NULL)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 58; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
     __Pyx_GOTREF(__pyx_t_11);
-    __pyx_t_8 = __Pyx_GetItemInt(__pyx_t_11, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(__pyx_t_8 == NULL)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 68; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
+    __pyx_t_8 = __Pyx_GetItemInt(__pyx_t_11, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(__pyx_t_8 == NULL)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 58; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
     __Pyx_GOTREF(__pyx_t_8);
     __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
-    __pyx_t_13 = __pyx_PyFloat_AsFloat(__pyx_t_8); if (unlikely((__pyx_t_13 == (float)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 68; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_13 = __pyx_PyFloat_AsFloat(__pyx_t_8); if (unlikely((__pyx_t_13 == (float)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 58; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
     __pyx_v_point_ax = __pyx_t_13;
 
-    /* "src/_lttb.pyx":69
+    /* "src/_lttb.pyx":59
  *         # Point a
  *         point_ax = data[a][0]
  *         point_ay = data[a][1]             # <<<<<<<<<<<<<<
  * 
  *         max_area = -1
  */
-    __pyx_t_8 = __Pyx_GetItemInt(__pyx_v_data, __pyx_v_a, long, 1, __Pyx_PyInt_From_long, 0, 1, 1); if (unlikely(__pyx_t_8 == NULL)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 69; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
+    __pyx_t_8 = __Pyx_GetItemInt(__pyx_v_data, __pyx_v_a, long, 1, __Pyx_PyInt_From_long, 0, 1, 1); if (unlikely(__pyx_t_8 == NULL)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 59; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
     __Pyx_GOTREF(__pyx_t_8);
-    __pyx_t_11 = __Pyx_GetItemInt(__pyx_t_8, 1, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(__pyx_t_11 == NULL)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 69; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
+    __pyx_t_11 = __Pyx_GetItemInt(__pyx_t_8, 1, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(__pyx_t_11 == NULL)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 59; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
     __Pyx_GOTREF(__pyx_t_11);
     __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
-    __pyx_t_13 = __pyx_PyFloat_AsFloat(__pyx_t_11); if (unlikely((__pyx_t_13 == (float)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 69; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_13 = __pyx_PyFloat_AsFloat(__pyx_t_11); if (unlikely((__pyx_t_13 == (float)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 59; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
     __pyx_v_point_ay = __pyx_t_13;
 
-    /* "src/_lttb.pyx":71
+    /* "src/_lttb.pyx":61
  *         point_ay = data[a][1]
  * 
  *         max_area = -1             # <<<<<<<<<<<<<<
@@ -1362,7 +1381,7 @@ static PyObject *__pyx_pf_5ulttb_5_lttb_downsample(CYTHON_UNUSED PyObject *__pyx
  */
     __pyx_v_max_area = -1.0;
 
-    /* "src/_lttb.pyx":73
+    /* "src/_lttb.pyx":63
  *         max_area = -1
  * 
  *         while range_offs < range_to:             # <<<<<<<<<<<<<<
@@ -1373,80 +1392,80 @@ static PyObject *__pyx_pf_5ulttb_5_lttb_downsample(CYTHON_UNUSED PyObject *__pyx
       __pyx_t_3 = ((__pyx_v_range_offs < __pyx_v_range_to) != 0);
       if (!__pyx_t_3) break;
 
-      /* "src/_lttb.pyx":75
+      /* "src/_lttb.pyx":65
  *         while range_offs < range_to:
  *             # Calculate triangle area over three buckets
  *             area = fabs((point_ax - avg_x)*(data[range_offs][1] - point_ay) -             # <<<<<<<<<<<<<<
  *                              (point_ax - data[range_offs][0])*(avg_y-point_ay))*0.5
  *             if area > max_area:
  */
-      __pyx_t_11 = PyFloat_FromDouble((__pyx_v_point_ax - __pyx_v_avg_x)); if (unlikely(!__pyx_t_11)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 75; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_11 = PyFloat_FromDouble((__pyx_v_point_ax - __pyx_v_avg_x)); if (unlikely(!__pyx_t_11)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 65; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_GOTREF(__pyx_t_11);
-      __pyx_t_8 = __Pyx_GetItemInt(__pyx_v_data, __pyx_v_range_offs, long, 1, __Pyx_PyInt_From_long, 0, 1, 1); if (unlikely(__pyx_t_8 == NULL)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 75; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
+      __pyx_t_8 = __Pyx_GetItemInt(__pyx_v_data, __pyx_v_range_offs, long, 1, __Pyx_PyInt_From_long, 0, 1, 1); if (unlikely(__pyx_t_8 == NULL)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 65; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
       __Pyx_GOTREF(__pyx_t_8);
-      __pyx_t_10 = __Pyx_GetItemInt(__pyx_t_8, 1, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(__pyx_t_10 == NULL)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 75; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
+      __pyx_t_10 = __Pyx_GetItemInt(__pyx_t_8, 1, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(__pyx_t_10 == NULL)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 65; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
       __Pyx_GOTREF(__pyx_t_10);
       __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
-      __pyx_t_8 = PyFloat_FromDouble(__pyx_v_point_ay); if (unlikely(!__pyx_t_8)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 75; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_8 = PyFloat_FromDouble(__pyx_v_point_ay); if (unlikely(!__pyx_t_8)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 65; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_GOTREF(__pyx_t_8);
-      __pyx_t_14 = PyNumber_Subtract(__pyx_t_10, __pyx_t_8); if (unlikely(!__pyx_t_14)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 75; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_14 = PyNumber_Subtract(__pyx_t_10, __pyx_t_8); if (unlikely(!__pyx_t_14)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 65; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_GOTREF(__pyx_t_14);
       __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
       __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
-      __pyx_t_8 = PyNumber_Multiply(__pyx_t_11, __pyx_t_14); if (unlikely(!__pyx_t_8)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 75; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_8 = PyNumber_Multiply(__pyx_t_11, __pyx_t_14); if (unlikely(!__pyx_t_8)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 65; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_GOTREF(__pyx_t_8);
       __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
       __Pyx_DECREF(__pyx_t_14); __pyx_t_14 = 0;
 
-      /* "src/_lttb.pyx":76
+      /* "src/_lttb.pyx":66
  *             # Calculate triangle area over three buckets
  *             area = fabs((point_ax - avg_x)*(data[range_offs][1] - point_ay) -
  *                              (point_ax - data[range_offs][0])*(avg_y-point_ay))*0.5             # <<<<<<<<<<<<<<
  *             if area > max_area:
  *                 max_area = area
  */
-      __pyx_t_14 = PyFloat_FromDouble(__pyx_v_point_ax); if (unlikely(!__pyx_t_14)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 76; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_14 = PyFloat_FromDouble(__pyx_v_point_ax); if (unlikely(!__pyx_t_14)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 66; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_GOTREF(__pyx_t_14);
-      __pyx_t_11 = __Pyx_GetItemInt(__pyx_v_data, __pyx_v_range_offs, long, 1, __Pyx_PyInt_From_long, 0, 1, 1); if (unlikely(__pyx_t_11 == NULL)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 76; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
+      __pyx_t_11 = __Pyx_GetItemInt(__pyx_v_data, __pyx_v_range_offs, long, 1, __Pyx_PyInt_From_long, 0, 1, 1); if (unlikely(__pyx_t_11 == NULL)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 66; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
       __Pyx_GOTREF(__pyx_t_11);
-      __pyx_t_10 = __Pyx_GetItemInt(__pyx_t_11, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(__pyx_t_10 == NULL)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 76; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
+      __pyx_t_10 = __Pyx_GetItemInt(__pyx_t_11, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(__pyx_t_10 == NULL)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 66; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
       __Pyx_GOTREF(__pyx_t_10);
       __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
-      __pyx_t_11 = PyNumber_Subtract(__pyx_t_14, __pyx_t_10); if (unlikely(!__pyx_t_11)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 76; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_11 = PyNumber_Subtract(__pyx_t_14, __pyx_t_10); if (unlikely(!__pyx_t_11)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 66; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_GOTREF(__pyx_t_11);
       __Pyx_DECREF(__pyx_t_14); __pyx_t_14 = 0;
       __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
-      __pyx_t_10 = PyFloat_FromDouble((__pyx_v_avg_y - __pyx_v_point_ay)); if (unlikely(!__pyx_t_10)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 76; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_10 = PyFloat_FromDouble((__pyx_v_avg_y - __pyx_v_point_ay)); if (unlikely(!__pyx_t_10)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 66; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_GOTREF(__pyx_t_10);
-      __pyx_t_14 = PyNumber_Multiply(__pyx_t_11, __pyx_t_10); if (unlikely(!__pyx_t_14)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 76; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_14 = PyNumber_Multiply(__pyx_t_11, __pyx_t_10); if (unlikely(!__pyx_t_14)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 66; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_GOTREF(__pyx_t_14);
       __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
       __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
 
-      /* "src/_lttb.pyx":75
+      /* "src/_lttb.pyx":65
  *         while range_offs < range_to:
  *             # Calculate triangle area over three buckets
  *             area = fabs((point_ax - avg_x)*(data[range_offs][1] - point_ay) -             # <<<<<<<<<<<<<<
  *                              (point_ax - data[range_offs][0])*(avg_y-point_ay))*0.5
  *             if area > max_area:
  */
-      __pyx_t_10 = PyNumber_Subtract(__pyx_t_8, __pyx_t_14); if (unlikely(!__pyx_t_10)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 75; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_10 = PyNumber_Subtract(__pyx_t_8, __pyx_t_14); if (unlikely(!__pyx_t_10)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 65; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_GOTREF(__pyx_t_10);
       __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
       __Pyx_DECREF(__pyx_t_14); __pyx_t_14 = 0;
-      __pyx_t_12 = __pyx_PyFloat_AsDouble(__pyx_t_10); if (unlikely((__pyx_t_12 == (double)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 75; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_7 = __pyx_PyFloat_AsDouble(__pyx_t_10); if (unlikely((__pyx_t_7 == (double)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 65; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
 
-      /* "src/_lttb.pyx":76
+      /* "src/_lttb.pyx":66
  *             # Calculate triangle area over three buckets
  *             area = fabs((point_ax - avg_x)*(data[range_offs][1] - point_ay) -
  *                              (point_ax - data[range_offs][0])*(avg_y-point_ay))*0.5             # <<<<<<<<<<<<<<
  *             if area > max_area:
  *                 max_area = area
  */
-      __pyx_v_area = (fabs(__pyx_t_12) * 0.5);
+      __pyx_v_area = (fabs(__pyx_t_7) * 0.5);
 
-      /* "src/_lttb.pyx":77
+      /* "src/_lttb.pyx":67
  *             area = fabs((point_ax - avg_x)*(data[range_offs][1] - point_ay) -
  *                              (point_ax - data[range_offs][0])*(avg_y-point_ay))*0.5
  *             if area > max_area:             # <<<<<<<<<<<<<<
@@ -1456,7 +1475,7 @@ static PyObject *__pyx_pf_5ulttb_5_lttb_downsample(CYTHON_UNUSED PyObject *__pyx
       __pyx_t_3 = ((__pyx_v_area > __pyx_v_max_area) != 0);
       if (__pyx_t_3) {
 
-        /* "src/_lttb.pyx":78
+        /* "src/_lttb.pyx":68
  *                              (point_ax - data[range_offs][0])*(avg_y-point_ay))*0.5
  *             if area > max_area:
  *                 max_area = area             # <<<<<<<<<<<<<<
@@ -1465,19 +1484,19 @@ static PyObject *__pyx_pf_5ulttb_5_lttb_downsample(CYTHON_UNUSED PyObject *__pyx
  */
         __pyx_v_max_area = __pyx_v_area;
 
-        /* "src/_lttb.pyx":79
+        /* "src/_lttb.pyx":69
  *             if area > max_area:
  *                 max_area = area
  *                 max_area_point = data[range_offs]             # <<<<<<<<<<<<<<
  *                 next_a = range_offs  # Next a is this b
  *             range_offs += 1
  */
-        __pyx_t_10 = __Pyx_GetItemInt(__pyx_v_data, __pyx_v_range_offs, long, 1, __Pyx_PyInt_From_long, 0, 1, 1); if (unlikely(__pyx_t_10 == NULL)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 79; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
+        __pyx_t_10 = __Pyx_GetItemInt(__pyx_v_data, __pyx_v_range_offs, long, 1, __Pyx_PyInt_From_long, 0, 1, 1); if (unlikely(__pyx_t_10 == NULL)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 69; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
         __Pyx_GOTREF(__pyx_t_10);
         __Pyx_DECREF_SET(__pyx_v_max_area_point, __pyx_t_10);
         __pyx_t_10 = 0;
 
-        /* "src/_lttb.pyx":80
+        /* "src/_lttb.pyx":70
  *                 max_area = area
  *                 max_area_point = data[range_offs]
  *                 next_a = range_offs  # Next a is this b             # <<<<<<<<<<<<<<
@@ -1486,7 +1505,7 @@ static PyObject *__pyx_pf_5ulttb_5_lttb_downsample(CYTHON_UNUSED PyObject *__pyx
  */
         __pyx_v_next_a = __pyx_v_range_offs;
 
-        /* "src/_lttb.pyx":77
+        /* "src/_lttb.pyx":67
  *             area = fabs((point_ax - avg_x)*(data[range_offs][1] - point_ay) -
  *                              (point_ax - data[range_offs][0])*(avg_y-point_ay))*0.5
  *             if area > max_area:             # <<<<<<<<<<<<<<
@@ -1495,7 +1514,7 @@ static PyObject *__pyx_pf_5ulttb_5_lttb_downsample(CYTHON_UNUSED PyObject *__pyx
  */
       }
 
-      /* "src/_lttb.pyx":81
+      /* "src/_lttb.pyx":71
  *                 max_area_point = data[range_offs]
  *                 next_a = range_offs  # Next a is this b
  *             range_offs += 1             # <<<<<<<<<<<<<<
@@ -1505,16 +1524,16 @@ static PyObject *__pyx_pf_5ulttb_5_lttb_downsample(CYTHON_UNUSED PyObject *__pyx
       __pyx_v_range_offs = (__pyx_v_range_offs + 1);
     }
 
-    /* "src/_lttb.pyx":83
+    /* "src/_lttb.pyx":73
  *             range_offs += 1
  * 
  *         sampled.append(max_area_point)  # Pick this point from the bucket             # <<<<<<<<<<<<<<
  *         a = next_a  # This a is the next a (chosen b)
  * 
  */
-    __pyx_t_15 = __Pyx_PyList_Append(__pyx_v_sampled, __pyx_v_max_area_point); if (unlikely(__pyx_t_15 == -1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 83; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_15 = __Pyx_PyList_Append(__pyx_v_sampled, __pyx_v_max_area_point); if (unlikely(__pyx_t_15 == -1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 73; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
 
-    /* "src/_lttb.pyx":84
+    /* "src/_lttb.pyx":74
  * 
  *         sampled.append(max_area_point)  # Pick this point from the bucket
  *         a = next_a  # This a is the next a (chosen b)             # <<<<<<<<<<<<<<
@@ -1523,7 +1542,7 @@ static PyObject *__pyx_pf_5ulttb_5_lttb_downsample(CYTHON_UNUSED PyObject *__pyx
  */
     __pyx_v_a = __pyx_v_next_a;
 
-    /* "src/_lttb.pyx":44
+    /* "src/_lttb.pyx":31
  *     sampled = [data[0]]  # Always add the first point
  * 
  *     for i in range(0, threshold-2):             # <<<<<<<<<<<<<<
@@ -1533,20 +1552,20 @@ static PyObject *__pyx_pf_5ulttb_5_lttb_downsample(CYTHON_UNUSED PyObject *__pyx
   }
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
 
-  /* "src/_lttb.pyx":86
+  /* "src/_lttb.pyx":76
  *         a = next_a  # This a is the next a (chosen b)
  * 
  *     sampled.append(data[data_len-1])  # Always add last             # <<<<<<<<<<<<<<
  * 
  *     return sampled
  */
-  __pyx_t_7 = (__pyx_v_data_len - 1);
-  __pyx_t_4 = __Pyx_GetItemInt(__pyx_v_data, __pyx_t_7, long, 1, __Pyx_PyInt_From_long, 0, 1, 1); if (unlikely(__pyx_t_4 == NULL)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 86; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
+  __pyx_t_12 = (__pyx_v_data_len - 1);
+  __pyx_t_4 = __Pyx_GetItemInt(__pyx_v_data, __pyx_t_12, long, 1, __Pyx_PyInt_From_long, 0, 1, 1); if (unlikely(__pyx_t_4 == NULL)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 76; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
   __Pyx_GOTREF(__pyx_t_4);
-  __pyx_t_15 = __Pyx_PyList_Append(__pyx_v_sampled, __pyx_t_4); if (unlikely(__pyx_t_15 == -1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 86; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_15 = __Pyx_PyList_Append(__pyx_v_sampled, __pyx_t_4); if (unlikely(__pyx_t_15 == -1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 76; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
 
-  /* "src/_lttb.pyx":88
+  /* "src/_lttb.pyx":78
  *     sampled.append(data[data_len-1])  # Always add last
  * 
  *     return sampled             # <<<<<<<<<<<<<<
@@ -1560,8 +1579,8 @@ static PyObject *__pyx_pf_5ulttb_5_lttb_downsample(CYTHON_UNUSED PyObject *__pyx
  * 
  * 
  * def downsample(data, long threshold):             # <<<<<<<<<<<<<<
- *     cdef:
- *         long every
+ *     cdef long data_len,avg_range_start,avg_range_end,avg_range_end_,range_offs, a, next_a, range_to
+ *     cdef float avg_x, avg_y, avg_range_length, point_ax, point_ay,  every
  */
 
   /* function exit code */
@@ -1641,8 +1660,8 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {0, 0, 0, 0, 0, 0, 0}
 };
 static int __Pyx_InitCachedBuiltins(void) {
-  __pyx_builtin_ValueError = __Pyx_GetBuiltinName(__pyx_n_s_ValueError); if (!__pyx_builtin_ValueError) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 28; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __pyx_builtin_range = __Pyx_GetBuiltinName(__pyx_n_s_range); if (!__pyx_builtin_range) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 44; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_builtin_ValueError = __Pyx_GetBuiltinName(__pyx_n_s_ValueError); if (!__pyx_builtin_ValueError) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 15; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_builtin_range = __Pyx_GetBuiltinName(__pyx_n_s_range); if (!__pyx_builtin_range) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 31; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   return 0;
   __pyx_L1_error:;
   return -1;
@@ -1652,36 +1671,36 @@ static int __Pyx_InitCachedConstants(void) {
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__Pyx_InitCachedConstants", 0);
 
-  /* "src/_lttb.pyx":28
+  /* "src/_lttb.pyx":15
  *             hasattr(data, "__getitem__") or
  *             hasattr(data, "__iter__")):
  *          raise ValueError("Data must be listlike.")             # <<<<<<<<<<<<<<
  * 
  *     data_len = len(data)
  */
-  __pyx_tuple_ = PyTuple_Pack(1, __pyx_kp_s_Data_must_be_listlike); if (unlikely(!__pyx_tuple_)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 28; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_tuple_ = PyTuple_Pack(1, __pyx_kp_s_Data_must_be_listlike); if (unlikely(!__pyx_tuple_)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 15; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_tuple_);
   __Pyx_GIVEREF(__pyx_tuple_);
 
-  /* "src/_lttb.pyx":34
+  /* "src/_lttb.pyx":21
  * 
  *     if data_len <= threshold:
  *         raise ValueError("Threshold must be smaller than the length of the data.")             # <<<<<<<<<<<<<<
  * 
- *     every = (data_len - 2)/(threshold - 2)
+ *     every = (data_len - 2.0)/(threshold - 2.0)
  */
-  __pyx_tuple__2 = PyTuple_Pack(1, __pyx_kp_s_Threshold_must_be_smaller_than_t); if (unlikely(!__pyx_tuple__2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 34; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_tuple__2 = PyTuple_Pack(1, __pyx_kp_s_Threshold_must_be_smaller_than_t); if (unlikely(!__pyx_tuple__2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 21; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_tuple__2);
   __Pyx_GIVEREF(__pyx_tuple__2);
 
-  /* "src/_lttb.pyx":40
+  /* "src/_lttb.pyx":27
  *     a = 0  # Initially a is the first point in the triangle
  *     next_a = 0
- *     max_area_point = (0, 0)             # <<<<<<<<<<<<<<
+ *     max_area_point = (0.0, 0.0)             # <<<<<<<<<<<<<<
  * 
  *     sampled = [data[0]]  # Always add the first point
  */
-  __pyx_tuple__3 = PyTuple_Pack(2, __pyx_int_0, __pyx_int_0); if (unlikely(!__pyx_tuple__3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 40; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_tuple__3 = PyTuple_Pack(2, __pyx_float_0_0, __pyx_float_0_0); if (unlikely(!__pyx_tuple__3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 27; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_tuple__3);
   __Pyx_GIVEREF(__pyx_tuple__3);
 
@@ -1689,10 +1708,10 @@ static int __Pyx_InitCachedConstants(void) {
  * 
  * 
  * def downsample(data, long threshold):             # <<<<<<<<<<<<<<
- *     cdef:
- *         long every
+ *     cdef long data_len,avg_range_start,avg_range_end,avg_range_end_,range_offs, a, next_a, range_to
+ *     cdef float avg_x, avg_y, avg_range_length, point_ax, point_ay,  every
  */
-  __pyx_tuple__4 = PyTuple_Pack(21, __pyx_n_s_data, __pyx_n_s_threshold, __pyx_n_s_every, __pyx_n_s_data_len, __pyx_n_s_avg_x, __pyx_n_s_avg_y, __pyx_n_s_avg_range_start, __pyx_n_s_avg_range_end, __pyx_n_s_avg_range_end_2, __pyx_n_s_avg_range_length, __pyx_n_s_range_offs, __pyx_n_s_a, __pyx_n_s_next_a, __pyx_n_s_range_to, __pyx_n_s_point_ax, __pyx_n_s_point_ay, __pyx_n_s_area, __pyx_n_s_max_area, __pyx_n_s_max_area_point, __pyx_n_s_sampled, __pyx_n_s_i); if (unlikely(!__pyx_tuple__4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 6; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_tuple__4 = PyTuple_Pack(21, __pyx_n_s_data, __pyx_n_s_threshold, __pyx_n_s_data_len, __pyx_n_s_avg_range_start, __pyx_n_s_avg_range_end, __pyx_n_s_avg_range_end_2, __pyx_n_s_range_offs, __pyx_n_s_a, __pyx_n_s_next_a, __pyx_n_s_range_to, __pyx_n_s_avg_x, __pyx_n_s_avg_y, __pyx_n_s_avg_range_length, __pyx_n_s_point_ax, __pyx_n_s_point_ay, __pyx_n_s_every, __pyx_n_s_area, __pyx_n_s_max_area, __pyx_n_s_max_area_point, __pyx_n_s_sampled, __pyx_n_s_i); if (unlikely(!__pyx_tuple__4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 6; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_tuple__4);
   __Pyx_GIVEREF(__pyx_tuple__4);
   __pyx_codeobj__5 = (PyObject*)__Pyx_PyCode_New(2, 0, 21, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__4, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_Volumes_Data_vasil_Projects_ult, __pyx_n_s_downsample, 6, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 6; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
@@ -1705,9 +1724,10 @@ static int __Pyx_InitCachedConstants(void) {
 
 static int __Pyx_InitGlobals(void) {
   if (__Pyx_InitStrings(__pyx_string_tab) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 1; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
+  __pyx_float_0_0 = PyFloat_FromDouble(0.0); if (unlikely(!__pyx_float_0_0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 1; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_float_1_0 = PyFloat_FromDouble(1.0); if (unlikely(!__pyx_float_1_0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 1; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_float_2_0 = PyFloat_FromDouble(2.0); if (unlikely(!__pyx_float_2_0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 1; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __pyx_int_0 = PyInt_FromLong(0); if (unlikely(!__pyx_int_0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 1; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __pyx_int_1 = PyInt_FromLong(1); if (unlikely(!__pyx_int_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 1; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __pyx_int_2 = PyInt_FromLong(2); if (unlikely(!__pyx_int_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 1; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   return 0;
   __pyx_L1_error:;
   return -1;
@@ -1811,8 +1831,8 @@ PyMODINIT_FUNC PyInit__lttb(void)
  * 
  * 
  * def downsample(data, long threshold):             # <<<<<<<<<<<<<<
- *     cdef:
- *         long every
+ *     cdef long data_len,avg_range_start,avg_range_end,avg_range_end_,range_offs, a, next_a, range_to
+ *     cdef float avg_x, avg_y, avg_range_length, point_ax, point_ay,  every
  */
   __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_5ulttb_5_lttb_1downsample, NULL, __pyx_n_s_ulttb__lttb); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 6; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
@@ -2230,13 +2250,6 @@ bad:
 }
 #endif
 
-static CYTHON_INLINE long __Pyx_div_long(long a, long b) {
-    long q = a / b;
-    long r = a - q*b;
-    q -= ((r != 0) & ((r ^ b) < 0));
-    return q;
-}
-
 static CYTHON_INLINE PyObject *__Pyx_GetItemInt_Generic(PyObject *o, PyObject* j) {
     PyObject *r;
     if (!j) return NULL;
@@ -2323,99 +2336,69 @@ static CYTHON_INLINE PyObject *__Pyx_GetItemInt_Fast(PyObject *o, Py_ssize_t i, 
 #endif
 
 #if CYTHON_COMPILING_IN_CPYTHON
-static PyObject* __Pyx_PyInt_AddObjC(PyObject *op1, PyObject *op2, CYTHON_UNUSED long intval, CYTHON_UNUSED int inplace) {
+static PyObject* __Pyx_PyFloat_AddObjC(PyObject *op1, PyObject *op2, double floatval, CYTHON_UNUSED int inplace) {
+    const double b = floatval;
+    double a, result;
+    if (likely(PyFloat_CheckExact(op1))) {
+        a = PyFloat_AS_DOUBLE(op1);
+    } else
     #if PY_MAJOR_VERSION < 3
     if (likely(PyInt_CheckExact(op1))) {
-        const long b = intval;
-        long x;
-        long a = PyInt_AS_LONG(op1);
-            x = (long)((unsigned long)a + b);
-            if (likely((x^a) >= 0 || (x^b) >= 0))
-                return PyInt_FromLong(x);
-            return PyLong_Type.tp_as_number->nb_add(op1, op2);
-    }
+        a = (double) PyInt_AS_LONG(op1);
+    } else
     #endif
-    #if CYTHON_USE_PYLONG_INTERNALS && PY_MAJOR_VERSION >= 3
     if (likely(PyLong_CheckExact(op1))) {
-        const long b = intval;
-        long a, x;
-        const PY_LONG_LONG llb = intval;
-        PY_LONG_LONG lla, llx;
+        #if CYTHON_USE_PYLONG_INTERNALS && PY_MAJOR_VERSION >= 3
         const digit* digits = ((PyLongObject*)op1)->ob_digit;
         const Py_ssize_t size = Py_SIZE(op1);
-        if (likely(__Pyx_sst_abs(size) <= 1)) {
-            a = likely(size) ? digits[0] : 0;
-            if (size == -1) a = -a;
-        } else {
-            switch (size) {
-                case -2:
-                    if (8 * sizeof(long) - 1 > 2 * PyLong_SHIFT) {
-                        a = -(long) (((((unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0]));
+        switch (size) {
+            case  0: a = 0.0; break;
+            case -1: a = -(double) digits[0]; break;
+            case  1: a = (double) digits[0]; break;
+            case -2:
+            case 2:
+                if (8 * sizeof(unsigned long) > 2 * PyLong_SHIFT && ((8 * sizeof(unsigned long) < 53) || (1 * PyLong_SHIFT < 53))) {
+                    a = (double) (((((unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0]));
+                    if ((8 * sizeof(unsigned long) < 53) || (2 * PyLong_SHIFT < 53) || (a < (double) (1L<<53))) {
+                        if (size == -2)
+                            a = -a;
                         break;
-                    } else if (8 * sizeof(PY_LONG_LONG) - 1 > 2 * PyLong_SHIFT) {
-                        lla = -(PY_LONG_LONG) (((((unsigned PY_LONG_LONG)digits[1]) << PyLong_SHIFT) | (unsigned PY_LONG_LONG)digits[0]));
-                        goto long_long;
                     }
-                case 2:
-                    if (8 * sizeof(long) - 1 > 2 * PyLong_SHIFT) {
-                        a = (long) (((((unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0]));
+                }
+            case -3:
+            case 3:
+                if (8 * sizeof(unsigned long) > 3 * PyLong_SHIFT && ((8 * sizeof(unsigned long) < 53) || (2 * PyLong_SHIFT < 53))) {
+                    a = (double) (((((((unsigned long)digits[2]) << PyLong_SHIFT) | (unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0]));
+                    if ((8 * sizeof(unsigned long) < 53) || (3 * PyLong_SHIFT < 53) || (a < (double) (1L<<53))) {
+                        if (size == -3)
+                            a = -a;
                         break;
-                    } else if (8 * sizeof(PY_LONG_LONG) - 1 > 2 * PyLong_SHIFT) {
-                        lla = (PY_LONG_LONG) (((((unsigned PY_LONG_LONG)digits[1]) << PyLong_SHIFT) | (unsigned PY_LONG_LONG)digits[0]));
-                        goto long_long;
                     }
-                case -3:
-                    if (8 * sizeof(long) - 1 > 3 * PyLong_SHIFT) {
-                        a = -(long) (((((((unsigned long)digits[2]) << PyLong_SHIFT) | (unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0]));
+                }
+            case -4:
+            case 4:
+                if (8 * sizeof(unsigned long) > 4 * PyLong_SHIFT && ((8 * sizeof(unsigned long) < 53) || (3 * PyLong_SHIFT < 53))) {
+                    a = (double) (((((((((unsigned long)digits[3]) << PyLong_SHIFT) | (unsigned long)digits[2]) << PyLong_SHIFT) | (unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0]));
+                    if ((8 * sizeof(unsigned long) < 53) || (4 * PyLong_SHIFT < 53) || (a < (double) (1L<<53))) {
+                        if (size == -4)
+                            a = -a;
                         break;
-                    } else if (8 * sizeof(PY_LONG_LONG) - 1 > 3 * PyLong_SHIFT) {
-                        lla = -(PY_LONG_LONG) (((((((unsigned PY_LONG_LONG)digits[2]) << PyLong_SHIFT) | (unsigned PY_LONG_LONG)digits[1]) << PyLong_SHIFT) | (unsigned PY_LONG_LONG)digits[0]));
-                        goto long_long;
                     }
-                case 3:
-                    if (8 * sizeof(long) - 1 > 3 * PyLong_SHIFT) {
-                        a = (long) (((((((unsigned long)digits[2]) << PyLong_SHIFT) | (unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0]));
-                        break;
-                    } else if (8 * sizeof(PY_LONG_LONG) - 1 > 3 * PyLong_SHIFT) {
-                        lla = (PY_LONG_LONG) (((((((unsigned PY_LONG_LONG)digits[2]) << PyLong_SHIFT) | (unsigned PY_LONG_LONG)digits[1]) << PyLong_SHIFT) | (unsigned PY_LONG_LONG)digits[0]));
-                        goto long_long;
-                    }
-                case -4:
-                    if (8 * sizeof(long) - 1 > 4 * PyLong_SHIFT) {
-                        a = -(long) (((((((((unsigned long)digits[3]) << PyLong_SHIFT) | (unsigned long)digits[2]) << PyLong_SHIFT) | (unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0]));
-                        break;
-                    } else if (8 * sizeof(PY_LONG_LONG) - 1 > 4 * PyLong_SHIFT) {
-                        lla = -(PY_LONG_LONG) (((((((((unsigned PY_LONG_LONG)digits[3]) << PyLong_SHIFT) | (unsigned PY_LONG_LONG)digits[2]) << PyLong_SHIFT) | (unsigned PY_LONG_LONG)digits[1]) << PyLong_SHIFT) | (unsigned PY_LONG_LONG)digits[0]));
-                        goto long_long;
-                    }
-                case 4:
-                    if (8 * sizeof(long) - 1 > 4 * PyLong_SHIFT) {
-                        a = (long) (((((((((unsigned long)digits[3]) << PyLong_SHIFT) | (unsigned long)digits[2]) << PyLong_SHIFT) | (unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0]));
-                        break;
-                    } else if (8 * sizeof(PY_LONG_LONG) - 1 > 4 * PyLong_SHIFT) {
-                        lla = (PY_LONG_LONG) (((((((((unsigned PY_LONG_LONG)digits[3]) << PyLong_SHIFT) | (unsigned PY_LONG_LONG)digits[2]) << PyLong_SHIFT) | (unsigned PY_LONG_LONG)digits[1]) << PyLong_SHIFT) | (unsigned PY_LONG_LONG)digits[0]));
-                        goto long_long;
-                    }
-                default: return PyLong_Type.tp_as_number->nb_add(op1, op2);
-            }
+                }
+            default:
+        #else
+        {
+        #endif
+            a = PyLong_AsDouble(op1);
+            if (unlikely(a == -1.0 && PyErr_Occurred())) return NULL;
         }
-                x = a + b;
-            return PyLong_FromLong(x);
-        long_long:
-                llx = lla + llb;
-            return PyLong_FromLongLong(llx);
+    } else {
+        return (inplace ? PyNumber_InPlaceAdd : PyNumber_Add)(op1, op2);
     }
-    #endif
-    if (PyFloat_CheckExact(op1)) {
-        const long b = intval;
-        double a = PyFloat_AS_DOUBLE(op1);
-            double result;
-            PyFPE_START_PROTECT("add", return NULL)
-            result = ((double)a) + (double)b;
-            PyFPE_END_PROTECT(result)
-            return PyFloat_FromDouble(result);
-    }
-    return (inplace ? PyNumber_InPlaceAdd : PyNumber_Add)(op1, op2);
+        PyFPE_START_PROTECT("add", return NULL)
+        result = a + b;
+        PyFPE_END_PROTECT(result)
+        return PyFloat_FromDouble(result);
 }
 #endif
 
