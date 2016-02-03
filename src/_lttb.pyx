@@ -7,6 +7,7 @@ def downsample(data, long threshold):
     cdef long data_len,avg_range_start,avg_range_end,avg_range_end_,range_offs, a, next_a, range_to
     cdef float avg_x, avg_y, avg_range_length, point_ax, point_ay,  every
     cdef double area, max_area
+    cdef long i
 
 
     if not (not hasattr(data, "strip") and
@@ -58,7 +59,7 @@ def downsample(data, long threshold):
         point_ax = data[a][0]
         point_ay = data[a][1]
 
-        max_area = -1
+        max_area = -1.0
 
         while range_offs < range_to:
             # Calculate triangle area over three buckets
