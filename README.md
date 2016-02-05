@@ -1,6 +1,5 @@
 ulttb.py
 ========================
 
-A fast implementation of the Largest-Triangle-Three-Buckets (LTTB) downsampling algorithm.
-It is based on [lttb-py](https://github.com/devoxi/lttb-py) and is over 3 times faster than the pure python implementation.
-The algorithm is implemented in Cython and compiled from C.
+A fast implementation of the Largest-Triangle-Three-Buckets (LTTB) downsampling algorithm. Python module written in pure C.
+It is based on [lttb-py](https://github.com/devoxi/lttb-py) and is over 12 and up to 25 times faster than the pure Python implementation.
