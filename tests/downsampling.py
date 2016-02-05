@@ -20,7 +20,6 @@ class DownsamplingTest(unittest.TestCase):
                 result.append([long(row[0]), float(row[1])])
 
         sampled = downsample(source, 500)
-        print sampled
         self.assertEqual(len(result), len(sampled))
         for s, r in zip(sampled, result):
             self.assertEqual(s[0], r[0])

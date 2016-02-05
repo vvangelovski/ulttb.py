@@ -21,7 +21,7 @@ static PyObject* downsample(PyObject* self, PyObject *args)
 
     if (!PyArg_ParseTuple(args, "Ol", &data, &threshold)) {
         dataSeq = PySequence_Fast(data, "expected a sequence");
-
+        Py_DECREF(dataSeq);
         return NULL;
     }
 
@@ -84,6 +84,7 @@ static PyObject* downsample(PyObject* self, PyObject *args)
 
     }
   PyList_Append(result, PySequence_Fast_GET_ITEM(data, dataLen - 1));
+  
   return (PyObject*) result;
 }
 
