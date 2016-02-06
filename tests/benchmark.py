@@ -1,6 +1,18 @@
+from __future__ import print_function
 import time
 from math import fabs, floor, sin, cos
 from ulttb import downsample
+
+try:
+    long(1)
+except NameError:
+    long = int
+
+
+try:
+    xrange
+except NameError:
+    xrange = range
 
 class Timer(object):
     def __enter__(self):
@@ -12,10 +24,10 @@ class Timer(object):
         self.interval = self.end - self.start
 
 DATA = [
-zip((sin(x)-2*cos(x-10) for x in xrange(512)), xrange(512)),
-zip((sin(x)-2*cos(x-10) for x in xrange(10000)), xrange(10000)),
-zip((sin(x)-2*cos(x-10) for x in xrange(100000)), xrange(100000)),
-zip((sin(x)-2*cos(x-10) for x in xrange(1000000)), xrange(1000000))
+list(zip((sin(x)-2*cos(x-10) for x in xrange(512)), xrange(512))),
+list(zip((sin(x)-2*cos(x-10) for x in xrange(10000)), xrange(10000))),
+list(zip((sin(x)-2*cos(x-10) for x in xrange(100000)), xrange(100000))),
+list(zip((sin(x)-2*cos(x-10) for x in xrange(1000000)), xrange(1000000)))
 
 ]
 
@@ -81,9 +93,9 @@ def downsample_py(data, threshold):
     return sampled
 
 def main():
-    print 'Doing 25 passes of each downsampling call'
-    print '%-14s|  %-14s|  %-14s|  %-14s|  %-14s'%\
-        ('data length', 'result length', 'ulttb (sec)', 'python (sec)', 'speedup')
+    print( 'Doing 25 passes of each downsampling call')
+    print('%-14s|  %-14s|  %-14s|  %-14s|  %-14s'%\
+        ('data length', 'result length', 'ulttb (sec)', 'python (sec)', 'speedup'))
     for dataset in DATA:
         for threshold in (32, 64, 512, 1024, 4*1024):
             if threshold < len(dataset):
@@ -91,9 +103,9 @@ def main():
                     for i in range(25): downsample(dataset, threshold)
                 with Timer() as t2:
                     for i in range(25): downsample_py(dataset, threshold)
-                print '======================================='*3
-                print '%-14i|  %-14i|  %-14f|  %-14f|  %-14f'%\
-                    (len(dataset), threshold, t1.interval, t2.interval, (t2.interval/t1.interval))
+                print( '======================================='*3)
+                print( '%-14i|  %-14i|  %-14f|  %-14f|  %-14f'%\
+                    (len(dataset), threshold, t1.interval, t2.interval, (t2.interval/t1.interval)))
 
 
 if __name__ == '__main__':

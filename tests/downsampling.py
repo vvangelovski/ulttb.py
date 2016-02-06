@@ -7,6 +7,10 @@ from ulttb import downsample
 
 pwd = os.path.dirname(__file__)
 
+try:
+    long(1)
+except:
+    long = int
 
 class DownsamplingTest(unittest.TestCase):
     def test_full(self):

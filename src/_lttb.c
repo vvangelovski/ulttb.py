@@ -1,8 +1,9 @@
 #include <Python.h>
+#include "py_defines.h"
 #include <math.h>
 
 
-
+static PyObject* downsample(PyObject* self, PyObject *args);
 
 static PyObject* downsample(PyObject* self, PyObject *args)
 {
@@ -11,7 +12,7 @@ static PyObject* downsample(PyObject* self, PyObject *args)
     PyObject* dataSeq;
     long threshold;
     Py_ssize_t dataLen;
-    PyObject* result = PyList_New(0);
+    PyObject* result; 
 
 
     Py_ssize_t avgRangeStart,avgRangeEnd,rangeOffs,rangeTo;
@@ -32,6 +33,8 @@ static PyObject* downsample(PyObject* self, PyObject *args)
         return data;
     }
 
+    result = PyList_New(threshold);
+    
     every = (dataLen - 2.0)/(threshold - 2.0);
 
     PyList_Append(result, PySequence_Fast_GET_ITEM(data, 0));
@@ -97,8 +100,49 @@ static PyMethodDef lttb_funcs[] = {
         { NULL, NULL, 0, NULL }
 };
 
-void init_lttb(void)
+
+#if PY_MAJOR_VERSION >= 3
+
+static struct PyModuleDef moduledef = {
+  PyModuleDef_HEAD_INIT,
+  "_lttb",
+  0,              /* m_doc */
+  -1,             /* m_size */
+  lttb_funcs,   /* m_methods */
+  NULL,           /* m_reload */
+  NULL,           /* m_traverse */
+  NULL,           /* m_clear */
+  NULL            /* m_free */
+};
+
+#define PYMODINITFUNC       PyObject *PyInit__lttb(void)
+#define PYMODULE_CREATE()   PyModule_Create(&moduledef)
+#define MODINITERROR        return NULL
+
+#else
+
+#define PYMODINITFUNC       PyMODINIT_FUNC init_lttb(void)
+#define PYMODULE_CREATE()   Py_InitModule("_lttb", lttb_funcs)
+#define MODINITERROR        return
+
+#endif
+
+PYMODINITFUNC
 {
-    Py_InitModule3("_lttb", lttb_funcs,
-                   "Extension module example!");
+    PyObject *module;
+    
+    module = PYMODULE_CREATE();
+    
+   if (module == NULL)
+   {
+       MODINITERROR;
+    }
+    
+    #if PY_MAJOR_VERSION >= 3
+        return module;
+    #else
+        Py_InitModule3("_lttb", lttb_funcs,
+                       "ulttb downsampling C implementation");
+    
+    #endif
 }
