@@ -33,7 +33,7 @@ static PyObject* downsample(PyObject* self, PyObject *args)
         return data;
     }
 
-    result = PyList_New(threshold);
+    result = PyList_New(0);
     
     every = (dataLen - 2.0)/(threshold - 2.0);
 
