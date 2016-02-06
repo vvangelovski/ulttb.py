@@ -12,7 +12,9 @@ static PyObject* downsample(PyObject* self, PyObject *args)
     PyObject* dataSeq;
     long threshold;
     Py_ssize_t dataLen;
-    PyObject* result; 
+    PyObject* result;
+    PyObject** dataRef;
+
 
 
     Py_ssize_t avgRangeStart,avgRangeEnd,rangeOffs,rangeTo;
@@ -34,6 +36,7 @@ static PyObject* downsample(PyObject* self, PyObject *args)
     }
 
     result = PyList_New(0);
+    dataRef = PySequence_Fast_ITEMS(data);
     
     every = (dataLen - 2.0)/(threshold - 2.0);
 
@@ -50,8 +53,9 @@ static PyObject* downsample(PyObject* self, PyObject *args)
         avgRangeLength = avgRangeEnd - avgRangeStart;
 
         while (avgRangeStart < avgRangeEnd){
-            avgX += PyFloat_AsDouble( PySequence_Fast_GET_ITEM(PySequence_Fast_GET_ITEM(data, avgRangeStart), 0));
-            avgY += PyFloat_AsDouble(  PySequence_Fast_GET_ITEM(PySequence_Fast_GET_ITEM(data, avgRangeStart), 1));
+            PyObject** item = PySequence_Fast_ITEMS(dataRef[avgRangeStart]);
+            avgX += PyFloat_AsDouble( item[0]);
+            avgY += PyFloat_AsDouble( item[1]);
             avgRangeStart++;
         }
 
@@ -61,20 +65,23 @@ static PyObject* downsample(PyObject* self, PyObject *args)
         rangeOffs =(Py_ssize_t) (floor((i+0.0)*every) + 1.0);
         rangeTo = (Py_ssize_t) (floor((i+1.0)*every) + 1.0);
 
-        pointAX =  PyFloat_AsDouble( PySequence_Fast_GET_ITEM(PySequence_Fast_GET_ITEM(data, a), 0));
-        pointAY =  PyFloat_AsDouble( PySequence_Fast_GET_ITEM(PySequence_Fast_GET_ITEM(data, a), 1));
+        PyObject** item = PySequence_Fast_ITEMS(dataRef[a]);
+        pointAX =  PyFloat_AsDouble( item[0]);
+        pointAY =  PyFloat_AsDouble( item[1]);
 
         double maxArea = -1.0;
 
         while(rangeOffs < rangeTo){
+            PyObject** item = PySequence_Fast_ITEMS(dataRef[rangeOffs]);
             double area = fabs(
-                (pointAX - avgX) * (PyFloat_AsDouble( PySequence_Fast_GET_ITEM(PySequence_Fast_GET_ITEM(data, rangeOffs), 1)) - pointAY) -
-                (avgY - pointAY) * (pointAX - PyFloat_AsDouble(  PySequence_Fast_GET_ITEM(PySequence_Fast_GET_ITEM(data, rangeOffs), 0)) )) * 0.5;
+                (pointAX - avgX) * (PyFloat_AsDouble(item[1]) - pointAY) -
+                (avgY - pointAY) * (pointAX - PyFloat_AsDouble(item[0])))  * 0.5;
 
 
             if(area > maxArea){
+
                 maxArea = area;
-                maxAreaPoint =  PySequence_Fast_GET_ITEM(data, rangeOffs);
+                maxAreaPoint =  dataRef[rangeOffs];
                 aNext = rangeOffs;
             }
 
@@ -86,7 +93,7 @@ static PyObject* downsample(PyObject* self, PyObject *args)
         a = aNext;
 
     }
-  PyList_Append(result, PySequence_Fast_GET_ITEM(data, dataLen - 1));
+  PyList_Append(result, dataRef[dataLen - 1]);
   
   return (PyObject*) result;
 }
