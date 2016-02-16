@@ -28,7 +28,30 @@ class DownsamplingTest(unittest.TestCase):
         for s, r in zip(sampled, result):
             self.assertEqual(s[0], r[0])
             self.assertEqual(s[1], r[1])
+            
+    def test_wrong_args_int_l(self):
+        with self.assertRaises(TypeError):
+            downsample(3, [2,3])
+            
+    def test_wrong_args_int_int(self):
+        with self.assertRaises(TypeError):
+            downsample(3, 3)
+    
+    def test_wrong_args_bad_list_1(self):
+        with self.assertRaises(ValueError):
+            downsample([1,2,3,4,5,6,7,8,9], 3)
+    
+    def test_wrong_args_bad_list_2(self):
+        with self.assertRaises(ValueError):
+            downsample([(1,2,3,4,), (5,6,7,8,9),  (5,6,7,8,9),  (5,6,7,8,9),  (5,6,7,8,9),  (5,6,7,8,9)], 3)
+    
+    def test_wrong_args_bad_list_3(self):
+        with self.assertRaises(ValueError):
+            downsample([(1,2,), (5,6,7,8,9),  (5,6,7,8,9),  (5,6,7,8,9),  (5,6,7,8,9),  (5,6,7,8,9)], 3)
 
+    def test_wrong_args_bad_list_4(self):
+        with self.assertRaises(ValueError):
+            downsample([(1,2,), "test",  "test",  "test",  "test",  (5,6,7,8,9)], 3)
 
 
 if __name__ == '__main__':

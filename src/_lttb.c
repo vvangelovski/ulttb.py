@@ -2,6 +2,8 @@
 #include "py_defines.h"
 #include <math.h>
 
+#include <stdio.h>
+
 
 static PyObject* downsample(PyObject* self, PyObject *args);
 
@@ -10,6 +12,7 @@ static PyObject* downsample(PyObject* self, PyObject *args)
 
     PyObject* data;
     PyObject* dataSeq;
+	PyObject* seq;
     long threshold;
     Py_ssize_t dataLen;
     PyObject* result;
@@ -24,11 +27,15 @@ static PyObject* downsample(PyObject* self, PyObject *args)
     double avgRangeLength, pointAX, pointAY, avgX, avgY, maxArea, area;
 
     if (!PyArg_ParseTuple(args, "Ol", &data, &threshold)) {
-        dataSeq = PySequence_Fast(data, "expected a sequence");
-        Py_DECREF(dataSeq);
         return NULL;
     }
 
+    dataSeq = PySequence_Fast(data, "expected a sequence");
+	if(dataSeq == NULL){
+		return NULL;
+	}
+    Py_DECREF(dataSeq);
+	
 
    dataLen = PySequence_Size(data);
 
@@ -36,12 +43,19 @@ static PyObject* downsample(PyObject* self, PyObject *args)
         return data;
     }
 
+
     result = PyList_New(0);
     dataRef = PySequence_Fast_ITEMS(data);
 
     every = (dataLen - 2.0)/(threshold - 2.0);
 
-    PyList_Append(result, PySequence_Fast_GET_ITEM(data, 0));
+    seq = PySequence_Fast(dataRef[0], "each data element must be a pair of x and y");
+	if(seq == NULL || PySequence_Size(seq) != 2){
+		PyErr_SetString(PyExc_ValueError, "each data element must be a pair of x and y");
+		return NULL;
+	}
+	Py_DECREF(seq);
+    PyList_Append(result, dataRef[0]);
 
     for(i = 0; i<threshold-2; i++){
         avgX = 0.0;
@@ -52,11 +66,20 @@ static PyObject* downsample(PyObject* self, PyObject *args)
         avgRangeLength = avgRangeEnd - avgRangeStart;
 
         while (avgRangeStart < avgRangeEnd){
+		    seq = PySequence_Fast(dataRef[avgRangeStart], "each data element must be a pair of x and y");
+			if(seq == NULL || PySequence_Size(seq) != 2){
+				PyErr_SetString(PyExc_ValueError, "each data element must be a pair of x and y");
+				return NULL;
+			}
+			Py_DECREF(seq);
+	
             item = PySequence_Fast_ITEMS(dataRef[avgRangeStart]);
+
             avgX += PyFloat_AsDouble( item[0]);
             avgY += PyFloat_AsDouble( item[1]);
             avgRangeStart++;
         }
+
 
         avgX = avgX / avgRangeLength;
         avgY = avgY / avgRangeLength;
@@ -65,6 +88,7 @@ static PyObject* downsample(PyObject* self, PyObject *args)
         rangeTo = (Py_ssize_t) (floor((i+1.0)*every) + 1.0);
 
         item = PySequence_Fast_ITEMS(dataRef[a]);
+		
         pointAX =  PyFloat_AsDouble( item[0]);
         pointAY =  PyFloat_AsDouble( item[1]);
 
